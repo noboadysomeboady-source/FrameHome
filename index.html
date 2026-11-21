@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="el">
+<html lang="ro">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=1920, initial-scale=1" />
@@ -104,34 +104,34 @@
   <div id="shade"></div>
   <div id="top"><div id="weather"></div><div id="clock"></div></div>
   <div id="date"></div>
-  <div id="wxcue">OK για πρόγνωση 5 ημερών ▾</div>
+  <div id="wxcue">OK pentru prognoza pe 5 zile ▾</div>
   <div id="forecast"></div>
   <div id="title"><div class="k" id="kick"></div><div class="t" id="name"></div></div>
   <div id="dock"><div id="track"></div></div>
-  <div id="hint"><b></b>Κόκκινο κουμπί: εφαρμογές και ρυθμίσεις</div>
-  <div id="testhint">Δοκιμή στον υπολογιστή: σύρε εδώ μια εικόνα εικονιδίου ή κάνε επικόλληση (Ctrl+V)</div>
+  <div id="hint"><b></b>Buton roșu: aplicații și setări</div>
+  <div id="testhint">Test pe calculator: trage o imagine aici sau lipește (Ctrl+V)</div>
   <div id="toast"></div>
   <div id="picker">
-    <h1>Ρυθμίσεις</h1>
+    <h1>Setări</h1>
     <div id="opts">
-      <div class="opt" id="opt0"><span class="ol">Εικονίδια (OK για αλλαγή)</span><b id="stylename"></b></div>
-      <div class="opt" id="opt1"><span class="ol">Πόλη για τον καιρό (OK για αλλαγή)</span><b id="cityname"></b>
-        <input id="cityinput" type="text" autocomplete="off" placeholder="π.χ. Πάτρα · κενό = αυτόματα"></div>
+      <div class="opt" id="opt0"><span class="ol">Pictograme (OK pentru schimbare)</span><b id="stylename"></b></div>
+      <div class="opt" id="opt1"><span class="ol">Oraș pentru meteo (OK pentru schimbare)</span><b id="cityname"></b>
+        <input id="cityinput" type="text" autocomplete="off" placeholder="ex. Chișinău · gol = implicit"></div>
     </div>
-    <p>Εφαρμογές: OK για να προσθέσεις ή να βγάλεις. Η σειρά στην αρχική είναι η σειρά που τις επιλέγεις. Κόκκινο ή Πίσω για αποθήκευση.</p>
+    <p>Aplicații: OK pentru adăugare sau eliminare. Ordinea selecției este ordinea afișării. Roșu sau Înapoi pentru salvare.</p>
     <div id="grid"></div>
   </div>
   <div id="diag"></div>
 <script>
 // ---- settings you can change ----
 // Weather location is found automatically from the internet connection.
-// To force a city, set e.g. FIXED_CITY = { name: "Πάτρα", lat: 38.2466, lon: 21.7346 };
-var FIXED_CITY = null;
-var FALLBACK_CITY = { name: "Αθήνα", lat: 37.9838, lon: 23.7275 };
+// To force a city, set e.g. FIXED_CITY = { name: "Chișinău", lat: 38.2466, lon: 21.7346 };
+var FIXED_CITY = { name: "Chișinău", lat: 47.0105, lon: 28.8638 };
+var FALLBACK_CITY = { name: "Chișinău", lat: 47.0105, lon: 28.8638 };
 var PHOTO_SECONDS = 30;
 // "white" = white logos, "color" = logos in their own colours, "original" = icons as the TV has them (with the box)
-var DEFAULT_ICON_STYLE = "white";
-var DEFAULT_APPS = [/tizentube/i, /youtube/i, /netflix/i, /spotify/i, /geforce/i, /\bzn\b/i];
+var DEFAULT_ICON_STYLE = "color";
+var DEFAULT_APPS = [/tizentube/i, /twitch.*ad[ -]?free|ad[ -]?free.*twitch|^tav$/i, /spotify/i];
 // ---------------------------------
 
 var ICON_SERVER = "http://127.0.0.1:47811/icon?path=";
@@ -149,7 +149,7 @@ function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("
 function loadApps(cb) {
   if (!hasTizen) {
     cb([
-      { id: "a.TizenTube", name: "TizenTube" }, { id: "org.tizen.netflix-app", name: "Netflix" },
+      { id: "a.TizenTube", name: "TizenTube" }, { id: "preview.Twitch", name: "Twitch AdFree" },
       { id: "b.GeForceNOW", name: "GeForce NOW" }, { id: "c.ZN", name: "ZN" },
       { id: "d.Spotify", name: "Spotify" }, { id: "e.PrimeVideo", name: "Prime Video" },
       { id: "f.Disney", name: "Disney+" }, { id: "g.Browser", name: "Internet" }, { id: "h.Plex", name: "Plex" }
@@ -170,9 +170,9 @@ function loadApps(cb) {
   } catch (e) { cb([]); }
 }
 function appById(id) { for (var i = 0; i < allApps.length; i++) if (allApps[i].id === id) return allApps[i]; return null; }
-function savePinned() { try { localStorage.setItem("home.pinned", JSON.stringify(pinned)); } catch (e) {} }
+function savePinned() { try { localStorage.setItem("home.ro.pinned", JSON.stringify(pinned)); } catch (e) {} }
 function loadPinned() {
-  try { var s = JSON.parse(localStorage.getItem("home.pinned") || "null"); if (s && s.length) return s; } catch (e) {}
+  try { var s = JSON.parse(localStorage.getItem("home.ro.pinned") || "null"); if (s && s.length && s.every(function (id) { return !!appById(id); })) return s; } catch (e) {}
   var ids = [];
   DEFAULT_APPS.forEach(function (re) {
     for (var i = 0; i < allApps.length; i++) {
@@ -189,8 +189,8 @@ function loadPinned() {
 // is detected and removed, so just the logo floats on the photo (white, or in its own colours).
 // If an icon can't be cleaned up (photo backgrounds etc.) a simple drawn symbol is shown instead.
 var STYLES = ["white", "color", "original"];
-var STYLE_NAMES = { white: "λευκά λογότυπα", color: "λογότυπα με τα χρώματά τους", original: "κανονικά εικονίδια (με το κουτί)" };
-var iconStyle = (function () { try { var v = localStorage.getItem("home.iconStyle"); if (STYLES.indexOf(v) >= 0) return v; } catch (e) {} return DEFAULT_ICON_STYLE; })();
+var STYLE_NAMES = { white: "sigle albe", color: "sigle colorate", original: "pictograme originale" };
+var iconStyle = (function () { try { var v = localStorage.getItem("home.ro.iconStyle"); if (STYLES.indexOf(v) >= 0) return v; } catch (e) {} return DEFAULT_ICON_STYLE; })();
 
 var GLYPHS = {
   film: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
@@ -485,7 +485,7 @@ function loadIcon(app) {
   function attempt(u) {
     var img = new Image();
     if (urls[u].cors) img.crossOrigin = "anonymous";
-    img.onload = function () { st.status = "ok"; st.img = img; st.url = urls[u].url; st.via = urls[u].cors ? "βοηθός" : "απευθείας"; refreshIcon(app); };
+    img.onload = function () { st.status = "ok"; st.img = img; st.url = urls[u].url; st.via = urls[u].cors ? "serviciu auxiliar" : "direct"; refreshIcon(app); };
     img.onerror = function () {
       tries++;
       if (u === 0 && tries < 6) { setTimeout(function () { attempt(0); }, 1500); return; } // helper may still be starting
@@ -514,13 +514,13 @@ function refreshIcon(app) {
 }
 function setIconStyle(next) {
   iconStyle = next;
-  try { localStorage.setItem("home.iconStyle", iconStyle); } catch (e) {}
+  try { localStorage.setItem("home.ro.iconStyle", iconStyle); } catch (e) {}
 }
 
 // ---------- dock ----------
 function buildDock() {
   items = pinned.map(appById).filter(Boolean);
-  items.push({ id: "__add", name: "Προσθήκη", add: true });
+  items.push({ id: "__add", name: "Adăugare", add: true });
   if (focus >= items.length) focus = items.length - 1;
   var dock = $("track"); dock.innerHTML = "";
   items.forEach(function (app) {
@@ -546,13 +546,13 @@ function setFocus(i) {
     $("track").style.transform = "translateX(" + (-scrollX) + "px)";
   }
   var app = items[focus];
-  $("kick").textContent = app.add ? "Ρυθμίσεις" : "Άνοιγμα";
-  $("name").textContent = app.add ? "Επίλεξε εφαρμογές" : app.name;
+  $("kick").textContent = app.add ? "Setări" : "Deschidere";
+  $("name").textContent = app.add ? "Alege aplicațiile" : app.name;
 }
 function launch(app) {
   if (app.add) { openPicker(); return; }
-  if (!hasTizen) { toast("Άνοιγμα " + app.name + " (προεπισκόπηση)"); return; }
-  toast("Άνοιγμα " + app.name + "…");
+  if (!hasTizen) { toast("Deschidere " + app.name + " (previzualizare)"); return; }
+  toast("Deschidere " + app.name + "…");
   try {
     tizen.application.launch(app.id, function () {}, function () { launchControl(app); });
   } catch (e) { launchControl(app); }
@@ -560,8 +560,8 @@ function launch(app) {
 function launchControl(app) {
   try {
     var c = new tizen.ApplicationControl("http://tizen.org/appcontrol/operation/default");
-    tizen.application.launchAppControl(c, app.id, function () {}, function () { toast("Δεν άνοιξε: " + app.name); });
-  } catch (e) { toast("Δεν άνοιξε: " + app.name); }
+    tizen.application.launchAppControl(c, app.id, function () {}, function () { toast("Nu s-a deschis: " + app.name); });
+  } catch (e) { toast("Nu s-a deschis: " + app.name); }
 }
 
 // ---------- picker ----------
@@ -570,7 +570,7 @@ function closePicker() { mode = "dock"; $("picker").classList.remove("on"); save
 function renderPicker() {
   $("stylename").textContent = STYLE_NAMES[iconStyle];
   var chosen = savedCity();
-  $("cityname").textContent = chosen ? chosen.name : "Αυτόματα" + (currentCity && currentCity.name ? " · " + currentCity.name : "");
+  $("cityname").textContent = chosen ? chosen.name : "Implicit" + (currentCity && currentCity.name ? " · " + currentCity.name : "");
   $("opt0").classList.toggle("focus", pzone === "opts" && ofocus === 0);
   $("opt1").classList.toggle("focus", pzone === "opts" && ofocus === 1);
   var g = $("grid"); g.innerHTML = "";
@@ -585,13 +585,14 @@ function renderPicker() {
   var f = g.children[pfocus]; if (f && f.scrollIntoView) f.scrollIntoView({ block: "nearest" });
 }
 function togglePick(i) {
+  if (!allApps[i]) return;
   var id = allApps[i].id, n = pinned.indexOf(id);
   if (n >= 0) pinned.splice(n, 1); else pinned.push(id);
   renderPicker();
 }
 
 // ---------- city for the weather ----------
-function savedCity() { try { return JSON.parse(localStorage.getItem("home.city") || "null"); } catch (e) { return null; } }
+function savedCity() { try { return JSON.parse(localStorage.getItem("home.ro.city") || "null"); } catch (e) { return null; } }
 function startCityEdit() {
   mode = "city";
   var box = $("opt1"), inp = $("cityinput");
@@ -607,23 +608,23 @@ function endCityEdit(save) {
   mode = "picker";
   if (!save) { renderPicker(); return; }
   if (!q) {
-    try { localStorage.removeItem("home.city"); localStorage.removeItem("home.loc"); } catch (e) {}
+    try { localStorage.removeItem("home.ro.city"); localStorage.removeItem("home.loc"); } catch (e) {}
     currentCity = null;
-    toast("Πόλη: αυτόματα");
+    toast("Oraș: implicit");
     loadWeather(); renderPicker(); return;
   }
-  toast("Αναζήτηση: " + q + "…");
-  fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&language=el&format=json&name=" + encodeURIComponent(q))
+  toast("Căutare: " + q + "…");
+  fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&language=ro&format=json&name=" + encodeURIComponent(q))
     .then(function (r) { return r.json(); })
     .then(function (j) {
       var r0 = j.results && j.results[0];
-      if (!r0) { toast("Δεν βρέθηκε: " + q); return; }
+      if (!r0) { toast("Nu a fost găsit: " + q); return; }
       var city = { name: r0.name, lat: r0.latitude, lon: r0.longitude };
-      try { localStorage.setItem("home.city", JSON.stringify(city)); } catch (e) {}
-      toast("Πόλη: " + city.name + (r0.country ? ", " + r0.country : ""));
+      try { localStorage.setItem("home.ro.city", JSON.stringify(city)); } catch (e) {}
+      toast("Oraș: " + city.name + (r0.country ? ", " + r0.country : ""));
       loadWeather(); renderPicker();
     })
-    .catch(function () { toast("Δεν υπάρχει σύνδεση για την αναζήτηση"); });
+    .catch(function () { toast("Nu există conexiune pentru căutare"); });
 }
 
 // ---------- check screen (green button) ----------
@@ -632,32 +633,32 @@ function openDiag() {
   var box = $("diag");
   box.classList.add("on");
   function render(helper) {
-    var lines = ["Έλεγχος (πράσινο ή Πίσω για κλείσιμο)", "",
-      "TV API: " + (hasTizen ? "ναι" : "όχι"),
-      "Εφαρμογές που βρέθηκαν: " + allApps.length,
-      "Βοηθός εικονιδίων: " + helper,
-      "Στυλ εικονιδίων: " + STYLE_NAMES[iconStyle],
-      "Καιρός για: " + (currentCity ? currentCity.name + (savedCity() ? " (επιλογή σου)" : " (αυτόματα)") : "-"), ""];
+    var lines = ["Diagnostic (verde sau Înapoi pentru închidere)", "",
+      "TV API: " + (hasTizen ? "da" : "nu"),
+      "Aplicații găsite: " + allApps.length,
+      "Serviciu pictograme: " + helper,
+      "Stil pictograme: " + STYLE_NAMES[iconStyle],
+      "Meteo pentru: " + (currentCity ? currentCity.name + (savedCity() ? " (selecție manuală)" : " (implicit)") : "-"), ""];
     items.forEach(function (a) {
       if (a.add) return;
       var st = iconState[a.id] || {};
-      var shown = st.status !== "ok" ? "[σύμβολο]  " : iconStyle === "original" ? "[κανονικό] " :
-        (st.proc && st.proc[iconStyle]) ? "[λογότυπο] " : "[σύμβολο]  ";
-      var why = st.status === "loading" ? "φορτώνει" : st.status !== "ok" ? "δεν φόρτωσε" :
-        (iconStyle !== "original" && !(st.proc && st.proc[iconStyle])) ? "φορτώθηκε, αλλά το φόντο δεν αφαιρέθηκε" : "ok (" + st.via + ")";
+      var shown = st.status !== "ok" ? "[simbol]  " : iconStyle === "original" ? "[original] " :
+        (st.proc && st.proc[iconStyle]) ? "[siglă] " : "[simbol]  ";
+      var why = st.status === "loading" ? "se încarcă" : st.status !== "ok" ? "nu s-a încărcat" :
+        (iconStyle !== "original" && !(st.proc && st.proc[iconStyle])) ? "încărcat, dar fundalul nu a fost eliminat" : "ok (" + st.via + ")";
       lines.push(shown + a.name + "  ·  " + a.id + "  ·  " + why);
-      lines.push("            " + (a.icon || "(χωρίς διαδρομή εικονιδίου)"));
+      lines.push("            " + (a.icon || "(fără cale pentru pictogramă)"));
     });
     box.textContent = lines.join("\n");
   }
-  render("έλεγχος…");
+  render("verificare…");
   var done = false;
-  setTimeout(function () { if (!done) { done = true; render("δεν απαντά"); } }, 3000);
+  setTimeout(function () { if (!done) { done = true; render("nu răspunde"); } }, 3000);
   try {
     fetch("http://127.0.0.1:47811/ping").then(function (r) { return r.text(); })
-      .then(function (t) { if (!done) { done = true; render(t === "ok" ? "λειτουργεί" : "δεν απαντά"); } })
-      .catch(function () { if (!done) { done = true; render("δεν απαντά"); } });
-  } catch (e) { done = true; render("δεν απαντά"); }
+      .then(function (t) { if (!done) { done = true; render(t === "ok" ? "funcționează" : "nu răspunde"); } })
+      .catch(function () { if (!done) { done = true; render("nu răspunde"); } });
+  } catch (e) { done = true; render("nu răspunde"); }
 }
 function closeDiag() { mode = "dock"; $("diag").classList.remove("on"); }
 
@@ -725,7 +726,7 @@ function tick() {
   var d = new Date();
   $("clock").textContent = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
   var city = $("date").getAttribute("data-city"), txt;
-  try { txt = d.toLocaleDateString("el-GR", { weekday: "long", day: "numeric", month: "long" }); }
+  try { txt = d.toLocaleDateString("ro-MD", { weekday: "long", day: "numeric", month: "long" }); }
   catch (e) { txt = d.toDateString(); }
   $("date").textContent = txt + (city ? " · " + city : "");
 }
@@ -762,12 +763,12 @@ function findLocation(cb) {
   });
 }
 var WX_TEXT = {
-  0: "Αίθριος", 1: "Λίγα σύννεφα", 2: "Αραιή συννεφιά", 3: "Συννεφιά",
-  45: "Ομίχλη", 48: "Ομίχλη", 51: "Ψιχάλα", 53: "Ψιχάλα", 55: "Ψιχάλα",
-  61: "Βροχή", 63: "Βροχή", 65: "Δυνατή βροχή", 66: "Παγωμένη βροχή", 67: "Παγωμένη βροχή",
-  71: "Χιόνι", 73: "Χιόνι", 75: "Δυνατό χιόνι", 77: "Χιονόνερο",
-  80: "Μπόρες", 81: "Μπόρες", 82: "Δυνατές μπόρες", 85: "Χιονομπόρες", 86: "Χιονομπόρες",
-  95: "Καταιγίδα", 96: "Καταιγίδα με χαλάζι", 99: "Καταιγίδα με χαλάζι"
+  0: "Senin", 1: "Puțini nori", 2: "Parțial noros", 3: "Noros",
+  45: "Ceață", 48: "Ceață", 51: "Burniță", 53: "Burniță", 55: "Burniță",
+  61: "Ploaie", 63: "Ploaie", 65: "Ploaie puternică", 66: "Ploaie înghețată", 67: "Ploaie înghețată",
+  71: "Ninsoare", 73: "Ninsoare", 75: "Ninsoare puternică", 77: "Granule de zăpadă",
+  80: "Averse", 81: "Averse", 82: "Averse puternice", 85: "Averse de ninsoare", 86: "Averse de ninsoare",
+  95: "Furtună", 96: "Furtună cu grindină", 99: "Furtună cu grindină"
 };
 function wxText(code) { return WX_TEXT[code] || ""; }
 var weatherDaily = null;
@@ -800,16 +801,16 @@ function setTopFocus(on) {
 }
 function renderForecast() {
   var box = $("forecast");
-  var title = currentCity && currentCity.name ? currentCity.name : "Καιρός";
+  var title = currentCity && currentCity.name ? currentCity.name : "Vremea";
   if (!weatherDaily || !weatherDaily.time) {
-    box.innerHTML = '<h1>' + title + '</h1><p class="sub">Φόρτωση πρόγνωσης…</p>';
+    box.innerHTML = '<h1>' + title + '</h1><p class="sub">Se încarcă prognoza…</p>';
     return;
   }
-  var days = ["Κυρ", "Δευ", "Τρί", "Τετ", "Πέμ", "Παρ", "Σάβ"];
-  var html = '<h1>' + title + '</h1><p class="sub">Οι επόμενες μέρες</p><div id="fdays">';
+  var days = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
+  var html = '<h1>' + title + '</h1><p class="sub">Următoarele zile</p><div id="fdays">';
   for (var i = 0; i < weatherDaily.time.length; i++) {
     var d = new Date(weatherDaily.time[i] + "T12:00:00");
-    var name = i === 0 ? "Σήμερα" : days[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth() + 1);
+    var name = i === 0 ? "Astăzi" : days[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth() + 1);
     html += '<div class="fday' + (i === 0 ? " today" : "") + '">' +
       '<div class="dname">' + name + '</div>' +
       iconFor(weatherDaily.weather_code[i]) +
@@ -817,7 +818,7 @@ function renderForecast() {
       '<div class="lo">' + Math.round(weatherDaily.temperature_2m_min[i]) + '°</div>' +
       '<div class="desc">' + wxText(weatherDaily.weather_code[i]) + '</div></div>';
   }
-  html += '</div><p class="sub" style="margin-top:40px">Πίσω ή OK για κλείσιμο</p>';
+  html += '</div><p class="sub" style="margin-top:40px">Înapoi sau OK pentru închidere</p>';
   box.innerHTML = html;
 }
 
@@ -847,15 +848,15 @@ function addTestIcon(file) {
   img.onload = function () {
     dropCount++;
     var id = "test-" + dropCount + "-" + Date.now();
-    var name = file.name && !/^image\.(png|jpe?g)$/i.test(file.name) ? file.name.replace(/\.[^.]+$/, "") : "Δοκιμή " + dropCount;
+    var name = file.name && !/^image\.(png|jpe?g)$/i.test(file.name) ? file.name.replace(/\.[^.]+$/, "") : "Test " + dropCount;
     allApps.push({ id: id, name: name, test: true });
-    iconState[id] = { status: "ok", img: img, url: url, via: "δοκιμή", proc: {} };
+    iconState[id] = { status: "ok", img: img, url: url, via: "test", proc: {} };
     pinned.unshift(id);
     focus = 0; scrollX = 0;
     buildDock();
-    toast("Προστέθηκε: " + name);
+    toast("Adăugat: " + name);
   };
-  img.onerror = function () { toast("Δεν διαβάστηκε η εικόνα"); };
+  img.onerror = function () { toast("Imaginea nu a putut fi citită"); };
   img.src = url;
 }
 document.addEventListener("dragover", function (e) { e.preventDefault(); });
@@ -877,10 +878,15 @@ tick(); setInterval(tick, 10000);
 loadWeather(); setInterval(loadWeather, 30 * 60 * 1000);
 nextPhoto(); setInterval(nextPhoto, PHOTO_SECONDS * 1000);
 loadApps(function (list) {
-  allApps = list;
+  allApps = [];
+  DEFAULT_APPS.forEach(function (re) {
+    for (var i = 0; i < list.length; i++) {
+      if (re.test(list[i].name)) { allApps.push(list[i]); break; }
+    }
+  });
   pinned = loadPinned().filter(function (id) { return appById(id); });
   buildDock();
-  if (hasTizen && !allApps.length) toast("Δεν βρέθηκαν εφαρμογές");
+  if (hasTizen && allApps.length < 3) toast("Unele aplicații nu au fost detectate. Verifică instalarea.");
 });
 </script>
 </body>
